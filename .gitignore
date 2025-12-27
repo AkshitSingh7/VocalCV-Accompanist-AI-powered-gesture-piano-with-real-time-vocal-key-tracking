@@ -1,0 +1,27 @@
+# --- Audio & Binary Assets ---
+ffmpeg.exe
+*.sf2
+*.wav
+*.mp3
+
+
+# Ignore virtual environments and cached bytecode
+venv/
+.env/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- IDE & System Files ---
+
+.vscode/
+.idea/
+.project
+.pydevproject
+Thumbs.db
+Desktop.ini
+
+# --- AI Models ---
+.torch/
