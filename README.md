@@ -47,7 +47,6 @@ The hand position then selects the chord degree:
 | :--- | :--- | :--- |
 | `VocalCV_MIDI.py` | Asynchronous MIDI Messaging | `mido` / `python-rtmidi` |
 | `VocalCV_SoundFont.py` | Real-time Wavetable Synthesis | `sf2_loader` / `pydub` |
-| `Exporter_WAV.py` | Pre-rendering & Caching | `AudioSegment` / `FFmpeg` |
 | `requirements.txt` | Environment Dependency Graph | `pip` |
 
 ---
