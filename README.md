@@ -1,7 +1,41 @@
 # VocalCV-Accompanist 🎹🎤
+
 > **Real-time AI Accompaniment: Fusing Deep Learning Pitch Estimation with Computer Vision Gesture Mapping.**
 
 VocalCV-Accompanist is a sophisticated Python-based instrument that transforms vocal input into a harmonic foundation. It utilizes a **Convolutional Neural Network (CNN)** for pitch tracking and **Mediapipe's Perception Pipeline** for 3D hand landmarking, all tied together by a custom **Diatonic Logic Engine**.
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Installation
+
+Open your terminal in the project folder and run:
+
+```bash
+pip install -r requirements.txt
+
+```
+
+### 2. Choosing Your Engine
+
+You have two ways to play. Choose the file that fits your setup:
+
+| File | Best For | Requirement |
+| --- | --- | --- |
+| **`VocalCV_MIDI.py`** | **Professional Use.** Zero latency, high-quality sounds (Piano 10, DAWs). | Virtual MIDI Cable (loopMIDI) |
+| **`VocalCV_SF2.py`** | **Casual Use.** Quick setup, plays sound directly from Python. | `ffmpeg.exe` & `.sf2` file |
+
+---
+
+## 🎹 How to use MIDI Mode (High Quality)
+
+The MIDI version doesn't make sound by itself; it sends "instructions" to other music software. To use it:
+
+1. **Install a Virtual Cable:** Download and install [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html). Create a new port named `AirPianoPort 1`.
+2. **Open your Sound Software:** Open **Piano 10**, **Ableton**, **FL Studio**, or **Contact**.
+3. **Set Input:** In your software's settings, set the **MIDI Input** to `AirPianoPort 1`.
+4. **Run the Script:** Run `python VocalCV_MIDI.py`. Your hand gestures will now trigger the high-quality sounds in your DAW/App.
 
 ---
 
@@ -9,84 +43,30 @@ VocalCV-Accompanist is a sophisticated Python-based instrument that transforms v
 
 The system operates across three parallel processing threads to ensure low-latency performance:
 
-1.  **Vocal Processing Thread (Digital Signal Processing):** * **Capture:** 16kHz Mono Pulse-Code Modulation (PCM) stream.
-    * **Inference:** Uses **TorchCrepe** (a implementation of the CREPE model) for state-of-the-art pitch estimation.
-    * **Mapping:** Converts estimated Frequency ($f_0$) to MIDI numbers using the formula:  
-        $$n = 69 + 12 \log_2\left(\frac{f_0}{440}\right)$$
-    * **Update:** Overwrites the global `current_tonic` variable via thread-safe locking.
-
-2.  **Computer Vision Thread (Mediapipe):**
-    * **Landmarking:** Detects 21 3D hand-knuckle coordinates.
-    * **Heuristics:** Calculates Euclidean distance between `THUMB_TIP` (Id 4) and `FINGER_TIPS` (Ids 8, 12, 16, 20) to detect binary "pinch" states.
-    * **Normalization:** Maps the Thumb's Y-coordinate ($0.0 - 1.0$) to the musical "Zone" (Lower/Upper) to select between Tonic/Subdominant and Dominant functions.
-
-3.  **Main/UI Thread (OpenCV & Musicpy):**
-    * **Theory Engine:** On pinch detection, it initializes a `musicpy.scale` object and performs a `pick_chord_by_degree` lookup.
-    * **Rendering:** UI overlay is drawn via OpenCV, displaying the active Scale, Roman Numeral Notation, and the Visual Volume Meter (RMS-based).
+1. **Vocal Processing Thread (DSP):**
+* **Inference:** Uses **TorchCrepe** for state-of-the-art pitch estimation.
+* **Mapping:** Converts estimated Frequency () to MIDI numbers using the formula:
 
 
 
----
-
-## 🎼 Music Theory Implementation
-
-The project uses **Diatonic Set Theory**. When a key is detected (e.g., G), the engine builds a Major Scale:
-`Scale('G', 'major') -> [G, A, B, C, D, E, F#]`
-
-The hand position then selects the chord degree:
-* **Index Pinch (Lower Zone):** Degree 0 → **I Major** (G - B - D)
-* **Index Pinch (Upper Zone):** Degree 4 → **V Major** (D - F# - A)
+2. **Computer Vision Thread (MediaPipe):**
+* **Heuristics:** Calculates Euclidean distance between `THUMB_TIP` and `FINGER_TIPS` to detect binary "pinch" states.
+* **Normalization:** Maps the Thumb's Y-coordinate () to the musical "Zone" (Lower/Upper).
 
 
+3. **Main/UI Thread (OpenCV & Musicpy):**
+* **Theory Engine:** On pinch, it initializes a `musicpy.scale` object and performs a `pick_chord_by_degree` lookup.
+* **Rendering:** Displays the active Scale, Roman Numerals, and a Visual Volume Meter.
 
----
 
-## 📂 Repository Breakdown
-
-| File | Technical Role | Engine / Library |
-| :--- | :--- | :--- |
-| `VocalCV_MIDI.py` | Asynchronous MIDI Messaging | `mido` / `python-rtmidi` |
-| `VocalCV_SoundFont.py` | Real-time Wavetable Synthesis | `sf2_loader` / `pydub` |
-| `requirements.txt` | Environment Dependency Graph | `pip` |
-
----
-🚀 Installation & Setup
-
-To get this project running on your machine, follow these steps:
-1. Install Python Dependencies
-
-Open your terminal or command prompt in the project folder and run the following command to install all required AI and Music libraries automatically:
-```
-pip install -r requirements.txt
-```
-
-2. FFmpeg Requirement (For SoundFont Version)
-
-If you are using the SoundFont (SF2) version, ensure you have ffmpeg.exe in the root directory. This is required for the sf2_loader to process audio.
-
-## 🛠️ Advanced Configuration
-
-### TorchCrepe Optimization
-In the script, you can adjust the `model` parameter:
-* `tiny`: Lowest latency, suitable for most CPUs.
-* `full`: Highest precision, requires CUDA-enabled GPU for real-time performance.
-
-### Low-Latency Audio
-To minimize "crackling" or "stuttering," we utilize a small buffer size in the `sounddevice` InputStream and `pygame.mixer`:
-```python
-pygame.mixer.pre_init(44100, -16, 2, 512) # 512 samples (~11ms buffer)
-
-```
 
 ---
 
 ## 🕹️ Control Interface
 
-The system splits functionality between your hands: the **Right Hand** is your "Keyboard," and the **Left Hand** is your "Pedalboard/Control Surface."
+### 🎹 Right Hand (Performance)
 
-### 🎹 Right Hand (Chord Performance)
-
-The chords played depend on which finger you pinch and where your hand is located vertically on the screen.
+The chords played depend on your finger pinch and your vertical hand position.
 
 | Finger Pinch | **Lower Zone** (Y < 0.5) | **Upper Zone** (Y > 0.5) |
 | --- | --- | --- |
@@ -97,21 +77,42 @@ The chords played depend on which finger you pinch and where your hand is locate
 
 ### ⚙️ Left Hand (System Commands)
 
-Use your left hand to modify the sound or lock the current musical key.
-
-* **Index Pinch:** Transpose **+1 Octave** (12 semitones).
-* **Middle Pinch:** Transpose **-1 Octave** (-12 semitones).
-* **Ring Pinch:** 🔒 **Lock Scale** – Freezes the current key so you can sing lyrics without the piano shifting scales.
-* **Pinky Pinch:** 🔓 **Unlock Scale** – Resumes real-time vocal pitch tracking.
+* **Index Pinch:** Transpose **+1 Octave**.
+* **Middle Pinch:** Transpose **-1 Octave**.
+* **Ring Pinch:** 🔒 **Lock Scale** – Ignores your voice (perfect for singing lyrics).
+* **Pinky Pinch:** 🔓 **Unlock Scale** – Resumes vocal pitch tracking.
 
 ---
 
-### Visual Zone Guide
+## 🎼 Music Theory Implementation
 
-The camera view is split horizontally in the middle:
+The project uses **Diatonic Set Theory**. When a key is detected (e.g., G), the engine builds a Major Scale:
+`Scale('G', 'major') -> [G, A, B, C, D, E, F#]`
 
-* **Top Half:** Reach up here to play "High Energy" chords like the **V** or **vi**.
-* **Bottom Half:** Keep your hand low for "Home" chords like the **I** or **IV**.
+The hand position then selects the chord degree:
+
+* **Index Pinch (Lower Zone):** Degree 0 → **I Major** (G - B - D)
+* **Index Pinch (Upper Zone):** Degree 4 → **V Major** (D - F# - A)
+
+---
+
+## 🛠️ Advanced Configuration
+
+### TorchCrepe Optimization
+
+In the script, you can adjust the `model` parameter:
+
+* `tiny`: Lowest latency, suitable for most CPUs.
+* `full`: Highest precision, requires CUDA-enabled GPU.
+
+### Low-Latency Audio
+
+To minimize latency in SF2 mode, we utilize a small buffer size:
+
+```python
+pygame.mixer.pre_init(44100, -16, 2, 512) # 512 samples (~11ms buffer)
+
+```
 
 ## 📜 Dependencies
 
