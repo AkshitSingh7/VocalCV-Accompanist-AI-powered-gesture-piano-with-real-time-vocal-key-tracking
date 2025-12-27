@@ -1,0 +1,12 @@
+opencv-python
+mediapipe
+torch
+torchcrepe
+sounddevice
+numpy
+pydub
+sf2_loader
+pygame
+mido
+python-rtmidi
+musicpy
