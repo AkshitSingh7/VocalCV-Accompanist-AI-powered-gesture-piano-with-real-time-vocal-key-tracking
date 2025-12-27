@@ -28,6 +28,27 @@ You have two ways to play. Choose the file that fits your setup:
 
 ---
 
+## 📂 Project Structure
+
+To run the application, ensure your local directory is organized as follows. Note that large binary files are excluded from the repository and must be added manually.
+
+```text
+VocalCV-Accompanist/
+├── .gitignore               # Prevents uploading large binaries
+├── LICENSE                  # MIT License
+├── README.md                # Technical & Setup guide
+├── requirements.txt         # Dependency list
+│
+├── VocalCV_MIDI.py          # Pro MIDI-out version
+├── VocalCV_SF2.py           # Internal SoundFont version
+│
+├── ffmpeg.exe               # [User-Provided] Required for SF2 audio
+└── Full Grand Piano.sf2     # [User-Provided] Place your soundbank here
+
+```
+
+---
+
 ## 🎹 How to use MIDI Mode (High Quality)
 
 The MIDI version doesn't make sound by itself; it sends "instructions" to other music software. To use it:
@@ -44,19 +65,20 @@ The MIDI version doesn't make sound by itself; it sends "instructions" to other 
 The system operates across three parallel processing threads to ensure low-latency performance:
 
 1. **Vocal Processing Thread (DSP):**
-* **Inference:** Uses **TorchCrepe** for state-of-the-art pitch estimation.
-* **Mapping:** Converts estimated Frequency () to MIDI numbers using the formula:
+* **Inference:** Uses **TorchCrepe** (CNN) for state-of-the-art pitch estimation.
+* **Mapping:** Converts estimated Frequency () to MIDI numbers:
+
 
 
 
 2. **Computer Vision Thread (MediaPipe):**
-* **Heuristics:** Calculates Euclidean distance between `THUMB_TIP` and `FINGER_TIPS` to detect binary "pinch" states.
-* **Normalization:** Maps the Thumb's Y-coordinate () to the musical "Zone" (Lower/Upper).
+* **Heuristics:** Euclidean distance calculation between `THUMB_TIP` and `FINGER_TIPS` for pinch detection.
+* **Normalization:** Maps Y-coordinates to musical "Zones" (Lower/Upper).
 
 
 3. **Main/UI Thread (OpenCV & Musicpy):**
-* **Theory Engine:** On pinch, it initializes a `musicpy.scale` object and performs a `pick_chord_by_degree` lookup.
-* **Rendering:** Displays the active Scale, Roman Numerals, and a Visual Volume Meter.
+* **Theory Engine:** Real-time diatonic chord lookup via `musicpy.scale`.
+* **Rendering:** Live HUD with Scale status and RMS-based Volume Meter.
 
 
 
@@ -65,8 +87,6 @@ The system operates across three parallel processing threads to ensure low-laten
 ## 🕹️ Control Interface
 
 ### 🎹 Right Hand (Performance)
-
-The chords played depend on your finger pinch and your vertical hand position.
 
 | Finger Pinch | **Lower Zone** (Y < 0.5) | **Upper Zone** (Y > 0.5) |
 | --- | --- | --- |
@@ -79,20 +99,8 @@ The chords played depend on your finger pinch and your vertical hand position.
 
 * **Index Pinch:** Transpose **+1 Octave**.
 * **Middle Pinch:** Transpose **-1 Octave**.
-* **Ring Pinch:** 🔒 **Lock Scale** – Ignores your voice (perfect for singing lyrics).
-* **Pinky Pinch:** 🔓 **Unlock Scale** – Resumes vocal pitch tracking.
-
----
-
-## 🎼 Music Theory Implementation
-
-The project uses **Diatonic Set Theory**. When a key is detected (e.g., G), the engine builds a Major Scale:
-`Scale('G', 'major') -> [G, A, B, C, D, E, F#]`
-
-The hand position then selects the chord degree:
-
-* **Index Pinch (Lower Zone):** Degree 0 → **I Major** (G - B - D)
-* **Index Pinch (Upper Zone):** Degree 4 → **V Major** (D - F# - A)
+* **Ring Pinch:** 🔒 **Lock Scale** – Freezes current key (for lyrical sections).
+* **Pinky Pinch:** 🔓 **Unlock Scale** – Resumes pitch tracking.
 
 ---
 
@@ -100,19 +108,21 @@ The hand position then selects the chord degree:
 
 ### TorchCrepe Optimization
 
-In the script, you can adjust the `model` parameter:
+Adjust the `model` parameter in the script for performance:
 
-* `tiny`: Lowest latency, suitable for most CPUs.
-* `full`: Highest precision, requires CUDA-enabled GPU.
+* `tiny`: Lowest latency (Standard).
+* `full`: Highest precision (Requires GPU/CUDA).
 
 ### Low-Latency Audio
 
-To minimize latency in SF2 mode, we utilize a small buffer size:
+Buffer optimization for the internal synth:
 
 ```python
 pygame.mixer.pre_init(44100, -16, 2, 512) # 512 samples (~11ms buffer)
 
 ```
+
+---
 
 ## 📜 Dependencies
 
