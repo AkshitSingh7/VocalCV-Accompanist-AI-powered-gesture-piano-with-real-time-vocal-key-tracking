@@ -50,6 +50,19 @@ The hand position then selects the chord degree:
 | `requirements.txt` | Environment Dependency Graph | `pip` |
 
 ---
+🚀 Installation & Setup
+
+To get this project running on your machine, follow these steps:
+1. Install Python Dependencies
+
+Open your terminal or command prompt in the project folder and run the following command to install all required AI and Music libraries automatically:
+Bash
+
+pip install -r requirements.txt
+
+2. FFmpeg Requirement (For SoundFont Version)
+
+If you are using the SoundFont (SF2) version, ensure you have ffmpeg.exe in the root directory. This is required for the sf2_loader to process audio.
 
 ## 🛠️ Advanced Configuration
 
