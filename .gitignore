@@ -5,7 +5,6 @@ ffmpeg.exe
 *.mp3
 
 
-# Ignore virtual environments and cached bytecode
 venv/
 .env/
 env/
